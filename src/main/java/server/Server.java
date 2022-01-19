@@ -15,7 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Server {
     private ServerSocket server;
     private Socket socket;
-    private final int PORT = 8171;
+    private final int PORT = 8170;
 
     private List<ClientHandler> clients;
     private AuthService authService;
