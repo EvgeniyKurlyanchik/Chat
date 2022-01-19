@@ -22,8 +22,11 @@ public class Server {
 
     public Server() {
         clients = new CopyOnWriteArrayList<>();
-        authService = new SimpleAuthService();
-
+       /* authService = new SimpleAuthService();*/
+        if(!SQLHandler.connect()){
+            throw  new RuntimeException("No connection with Database");
+        }
+        authService = new DBAuthService();
         try {
             server = new ServerSocket(PORT);
             System.out.println("Server started!");
@@ -36,6 +39,7 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+            SQLHandler.disconnect();
             System.out.println("Server stop");
             try {
                 server.close();
@@ -47,10 +51,12 @@ public class Server {
 
     public void subscribe(ClientHandler clientHandler) {
         clients.add(clientHandler);
+        broadcastClientList();
     }
 
     public void unsubscribe(ClientHandler clientHandler) {
         clients.remove(clientHandler);
+        broadcastClientList();
     }
 
     public void broadcastMsg(ClientHandler sender, String msg) {
@@ -59,19 +65,44 @@ public class Server {
             c.sendMsg(message);
         }
     }
-    public void privateMsg(ClientHandler sender,String receiver, String msg) {
-        String message = String.format("[ %s ] to [ %s ]: %s", sender.getNickname(),receiver, msg);
+
+    public void privateMsg(ClientHandler sender, String receiver, String msg) {
+        String message = String.format("[ %s ] to [ %s ]: %s", sender.getNickname(), receiver, msg);
         for (ClientHandler c : clients) {
-            if( c.getNickname().equals(receiver)){
-            c.sendMsg(message);
-            if(!sender.getNickname().equals(receiver)){
-               sender.sendMsg(message);
-            }
-            return;
+            if (c.getNickname().equals(receiver)) {
+                c.sendMsg(message);
+                if (!sender.getNickname().equals(receiver)) {
+                    sender.sendMsg(message);
+                }
+                return;
             }
         }
-        sender.sendMsg("Не найден пользователь" + receiver);
+        sender.sendMsg("not found user: " + receiver);
     }
+
+    public boolean isLoginAuthenticated(String login) {
+        for (ClientHandler c : clients) {
+            if (c.getLogin().equals(login)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void broadcastClientList() {
+        StringBuilder sb = new StringBuilder("/clientlist");
+
+        for (ClientHandler c : clients) {
+            sb.append(" ").append(c.getNickname());
+        }
+
+        String message = sb.toString();
+
+        for (ClientHandler c : clients) {
+            c.sendMsg(message);
+        }
+    }
+
     public AuthService getAuthService() {
         return authService;
     }
