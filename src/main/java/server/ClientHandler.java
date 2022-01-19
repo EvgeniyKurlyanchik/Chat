@@ -60,6 +60,7 @@ public class ClientHandler {
                                 sendMsg("/end");
                                 break;
                             }
+                        }
                             if (str.startsWith("/w")) {
                                 String[] token = str.split(" ", 3);
                                 if (token.length < 3) {
@@ -67,10 +68,10 @@ public class ClientHandler {
                                 }
                                 server.privateMsg(this,token[1],token[2]);
                             } else {
-                                server.broadcastMsg(this, str);
+                                server.broadcastMsg(this,str);
                             }
 
-                        }
+
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
