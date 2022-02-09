@@ -1,5 +1,7 @@
 package server;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.omg.CORBA.PUBLIC_MEMBER;
 
 import java.io.DataInputStream;
@@ -16,11 +18,12 @@ public class Server {
     private ServerSocket server;
     private Socket socket;
     private final int PORT = 8171;
-
+    private ExecutorService executorService;
     private List<ClientHandler> clients;
     private AuthService authService;
 
     public Server() {
+        executorService = Executors.newCachedThreadPool();
         clients = new CopyOnWriteArrayList<>();
        /* authService = new SimpleAuthService();*/
         if(!SQLHandler.connect()){
@@ -39,6 +42,7 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+            executorService.shutdown();
             SQLHandler.disconnect();
             System.out.println("Server stop");
             try {
@@ -105,5 +109,9 @@ public class Server {
 
     public AuthService getAuthService() {
         return authService;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 }
